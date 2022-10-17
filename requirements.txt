@@ -17,4 +17,4 @@ pero==0.10.0
 Pillow==7.0.0
 scikit_learn==0.22.1
 scikit-image>=0.0
-
+gast==0.2.2
