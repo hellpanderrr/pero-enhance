@@ -131,6 +131,8 @@ def main():
             print('\n\n\nNo model restored, training from scratch.\n')
 
         # OCR pretraining
+        writer = tf.summary.FileWriter("ocr", session.graph)
+
         for iteration in range(args.ocr_iterations):
             if np.random.rand()>0.5:
                 images, _, ctc_targets, seq_lengths = train_dataset_hq.get_batch(degrade=False)
@@ -139,7 +141,7 @@ def main():
             feed_dict = {ugan.input_images: images,
                          ugan.ctc_targets: ctc_targets,
                          ugan.ctc_seq_len: seq_lengths}
-            if iteration % 100 == 0:
+            if iteration % 39 == 0:
                 ctc_loss, ctc_cer, ctc_decoded, ctc_targets = session.run(
                         [ugan.ctc_loss, ugan.ctc_cer, ugan.ctc_decoded, ugan.ctc_targets],
                         feed_dict=feed_dict)
@@ -148,10 +150,14 @@ def main():
             else:
                 _, ctc_loss, ctc_cer = session.run([ugan.ocr_optimizer, ugan.ctc_loss, ugan.ctc_cer],
                                                    feed_dict=feed_dict)
+              
             print('step', iteration, ', CTC: {:2.2f}, CER: {:2.2f}'.format(ctc_loss, ctc_cer))
+        
+        writer.close()
         ugan.saver.save(session, os.path.join(args.output_path, 'model', 'ugan_checkpoint_ocr_pretrain'))
 
         # Restoration training
+        writer = tf.summary.FileWriter("rest", session.graph)
         for iteration in range(args.max_iterations):
             input_images, transcriptions, ctc_targets, seq_lengths = train_dataset_lq.get_batch(degrade=args.degrade_trn)
             reference_images, reference_transcriptions, _, _ = train_dataset_hq.get_batch(degrade=False)
@@ -188,6 +194,6 @@ def main():
                     cv2.imwrite(os.path.join(image_output_path, 'img_{:04d}_in.jpg'.format(ind)),
                                     (255*input_images[0,:,:,:]).astype(np.uint8))
 
-
+        writer.close()
 if __name__=='__main__':
     main()

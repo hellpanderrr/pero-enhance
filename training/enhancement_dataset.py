@@ -41,7 +41,7 @@ class EnhancementDataset(object):
         self.chars = impact_chars
         self.from_char, self.to_char = self.get_chars_mapping(self.chars)
 
-        with open(lines_path, 'r') as handle:
+        with open(lines_path, 'r',encoding='utf-8') as handle:
             file_lines = handle.read().splitlines()
             for file_line in file_lines:
                 line_path, transcription = file_line.split('\t')
